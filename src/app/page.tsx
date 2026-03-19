@@ -4,43 +4,23 @@ import Link from "next/link";
 import { prisma } from "@/lib/db";
 import DealCard from "@/components/DealCard";
 
-const CATEGORIES = [
-  { name: "אלקטרוניקה", icon: "🎧", slug: "electronics" },
-  { name: "בריאות ויופי", icon: "💊", slug: "health" },
-  { name: "בית וגן", icon: "🏠", slug: "home" },
-  { name: "אופנה", icon: "👗", slug: "fashion" },
-  { name: "ספורט", icon: "🏃", slug: "sports" },
-  { name: "ילדים ותינוקות", icon: "🧸", slug: "kids" },
-  { name: "כלי מטבח", icon: "🍳", slug: "kitchen" },
-  { name: "אביזרי רכב", icon: "🚗", slug: "car" },
-] as const;
-
 export default async function HomePage() {
-  const [featuredDeals, categories] = await Promise.all([
-    prisma.product.findMany({
-      where: { isPublished: true, status: "PUBLISHED" },
-      orderBy: { score: "desc" },
-      take: 6,
-      include: {
-        store: { select: { name: true, platform: true } },
-        category: { select: { nameHe: true, slug: true } },
-      },
-    }),
-    prisma.category.findMany({
-      where: { isActive: true, parentId: null },
-      orderBy: { demandScore: "desc" },
-      take: 8,
-      select: { nameHe: true, slug: true, icon: true },
-    }),
-  ]);
+  let featuredDeals: Awaited<ReturnType<typeof fetchDeals>> = [];
+  let categoriesWithCounts: Array<{
+    nameHe: string;
+    slug: string;
+    icon: string | null;
+    _count: { products: number };
+  }> = [];
 
-  const displayCategories = categories.length > 0
-    ? categories.map((c) => ({
-        name: c.nameHe,
-        icon: c.icon || "📦",
-        slug: c.slug,
-      }))
-    : CATEGORIES;
+  try {
+    [featuredDeals, categoriesWithCounts] = await Promise.all([
+      fetchDeals(),
+      fetchCategories(),
+    ]);
+  } catch (error) {
+    console.error("Failed to fetch homepage data:", error);
+  }
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://clickly.co.il";
 
@@ -81,6 +61,7 @@ export default async function HomePage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
       />
+
       {/* ===== HERO SECTION ===== */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-bl from-emerald-900/40 via-gray-950 to-gray-950" />
@@ -99,7 +80,7 @@ export default async function HomePage() {
             הדילים הכי שווים
             <br />
             <span className="bg-gradient-to-l from-emerald-400 to-green-300 bg-clip-text text-transparent">
-              מהעולם 🔥
+              מהעולם
             </span>
           </h1>
 
@@ -122,41 +103,62 @@ export default async function HomePage() {
               rel="noopener noreferrer"
               className="border-2 border-gray-700 hover:border-emerald-500/50 text-gray-300 hover:text-emerald-400 px-8 py-4 rounded-2xl text-lg font-semibold transition-all"
             >
-              📱 ערוץ טלגרם
+              ערוץ טלגרם
             </a>
           </div>
 
           {/* Trust indicators */}
           <div className="flex items-center justify-center gap-6 md:gap-10 mt-14 text-sm text-gray-500">
-            <span className="flex items-center gap-1.5">✅ משלוח לישראל</span>
-            <span className="flex items-center gap-1.5">💰 מחירים בשקלים</span>
-            <span className="flex items-center gap-1.5">🎟️ קופונים בלעדיים</span>
+            <span className="flex items-center gap-1.5">משלוח לישראל</span>
+            <span className="flex items-center gap-1.5">מחירים בשקלים</span>
+            <span className="flex items-center gap-1.5">קופונים בלעדיים</span>
           </div>
         </div>
       </section>
 
       {/* ===== FEATURED DEALS ===== */}
-      {featuredDeals.length > 0 && (
-        <section className="max-w-7xl mx-auto px-4 py-16 md:py-20">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-2xl md:text-3xl font-bold">
-              🔥 דילים חמים עכשיו
-            </h2>
+      <section className="max-w-7xl mx-auto px-4 py-16 md:py-20">
+        <div className="flex items-center justify-between mb-8">
+          <h2 className="text-2xl md:text-3xl font-bold">
+            דילים חמים עכשיו
+          </h2>
+          {featuredDeals.length > 0 && (
             <Link
               href="/deals"
               className="text-emerald-400 hover:text-emerald-300 text-sm font-medium transition-colors"
             >
               הצג הכל &larr;
             </Link>
-          </div>
+          )}
+        </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
+        {featuredDeals.length > 0 ? (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
             {featuredDeals.map((deal) => (
               <DealCard key={deal.id} product={deal} />
             ))}
           </div>
-        </section>
-      )}
+        ) : (
+          <div className="text-center py-16 bg-gray-900/50 rounded-3xl border border-gray-800">
+            <div className="text-5xl mb-4">🛍️</div>
+            <h3 className="text-xl font-bold text-gray-300 mb-2">
+              בקרוב דילים חדשים!
+            </h3>
+            <p className="text-gray-500 max-w-md mx-auto">
+              אנחנו סורקים את הרשת כדי למצוא לכם את הדילים הכי שווים.
+              הצטרפו לערוץ הטלגרם שלנו ותהיו הראשונים לדעת.
+            </p>
+            <a
+              href="https://t.me/clickli26"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block mt-6 bg-emerald-500 hover:bg-emerald-400 text-gray-950 px-6 py-3 rounded-xl text-sm font-bold transition-colors"
+            >
+              הצטרפו לטלגרם &larr;
+            </a>
+          </div>
+        )}
+      </section>
 
       {/* ===== HOW IT WORKS ===== */}
       <section className="bg-gray-900/50 border-t border-b border-gray-800">
@@ -202,27 +204,34 @@ export default async function HomePage() {
       </section>
 
       {/* ===== CATEGORIES GRID ===== */}
-      <section className="max-w-7xl mx-auto px-4 py-16 md:py-20">
-        <h2 className="text-2xl md:text-3xl font-bold text-center mb-10">
-          קטגוריות פופולריות
-        </h2>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          {displayCategories.map((cat) => (
-            <Link
-              key={cat.slug}
-              href={`/deals?cat=${cat.slug}`}
-              className="group bg-gray-900 border border-gray-800 rounded-2xl p-6 text-center hover:border-emerald-500/40 hover:bg-gray-900/80 transition-all hover:-translate-y-1"
-            >
-              <div className="text-4xl mb-3 group-hover:scale-110 transition-transform">
-                {cat.icon}
-              </div>
-              <div className="font-semibold text-sm text-gray-300 group-hover:text-emerald-400 transition-colors">
-                {cat.name}
-              </div>
-            </Link>
-          ))}
-        </div>
-      </section>
+      {categoriesWithCounts.length > 0 && (
+        <section className="max-w-7xl mx-auto px-4 py-16 md:py-20">
+          <h2 className="text-2xl md:text-3xl font-bold text-center mb-10">
+            קטגוריות פופולריות
+          </h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+            {categoriesWithCounts.map((cat) => (
+              <Link
+                key={cat.slug}
+                href={`/deals?category=${cat.slug}`}
+                className="group bg-gray-900 border border-gray-800 rounded-2xl p-6 text-center hover:border-emerald-500/40 hover:bg-gray-900/80 transition-all hover:-translate-y-1"
+              >
+                <div className="text-4xl mb-3 group-hover:scale-110 transition-transform">
+                  {cat.icon || "📦"}
+                </div>
+                <div className="font-semibold text-sm text-gray-300 group-hover:text-emerald-400 transition-colors">
+                  {cat.nameHe}
+                </div>
+                {cat._count.products > 0 && (
+                  <div className="text-xs text-gray-600 mt-1">
+                    {cat._count.products} דילים
+                  </div>
+                )}
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* ===== TELEGRAM CTA ===== */}
       <section className="max-w-4xl mx-auto px-4 pb-20">
@@ -323,4 +332,38 @@ export default async function HomePage() {
       </footer>
     </div>
   );
+}
+
+async function fetchDeals() {
+  return prisma.product.findMany({
+    where: {
+      isPublished: true,
+      status: "PUBLISHED",
+    },
+    orderBy: { score: "desc" },
+    take: 12,
+    include: {
+      store: { select: { name: true, platform: true } },
+      category: { select: { nameHe: true, slug: true } },
+    },
+  });
+}
+
+async function fetchCategories() {
+  return prisma.category.findMany({
+    where: { isActive: true, parentId: null },
+    orderBy: { demandScore: "desc" },
+    select: {
+      nameHe: true,
+      slug: true,
+      icon: true,
+      _count: {
+        select: {
+          products: {
+            where: { isPublished: true, status: "PUBLISHED" },
+          },
+        },
+      },
+    },
+  });
 }

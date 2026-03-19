@@ -9,6 +9,7 @@ export async function GET() {
     include: {
       store: { select: { name: true, platform: true } },
       category: { select: { nameHe: true } },
+      _count: { select: { clicks: true, conversions: true } },
     },
   });
 
