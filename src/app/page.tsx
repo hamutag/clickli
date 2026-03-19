@@ -3,9 +3,12 @@ export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import DealCard from "@/components/DealCard";
+import HotDealsBanner from "@/components/HotDealsBanner";
+import SubscribeForm from "@/components/SubscribeForm";
 
 export default async function HomePage() {
   let featuredDeals: Awaited<ReturnType<typeof fetchDeals>> = [];
+  let hotDeals: Awaited<ReturnType<typeof fetchHotDeals>> = [];
   let categoriesWithCounts: Array<{
     nameHe: string;
     slug: string;
@@ -14,8 +17,9 @@ export default async function HomePage() {
   }> = [];
 
   try {
-    [featuredDeals, categoriesWithCounts] = await Promise.all([
+    [featuredDeals, hotDeals, categoriesWithCounts] = await Promise.all([
       fetchDeals(),
+      fetchHotDeals(),
       fetchCategories(),
     ]);
   } catch (error) {
@@ -115,6 +119,9 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* ===== HOT DEALS BANNER ===== */}
+      <HotDealsBanner deals={hotDeals} />
 
       {/* ===== FEATURED DEALS ===== */}
       <section className="max-w-7xl mx-auto px-4 py-16 md:py-20">
@@ -233,6 +240,20 @@ export default async function HomePage() {
         </section>
       )}
 
+      {/* ===== SUBSCRIBE SECTION ===== */}
+      <section className="max-w-4xl mx-auto px-4 pb-12">
+        <div className="bg-gray-900 border border-gray-800 rounded-3xl p-8 md:p-10 text-center">
+          <div className="text-4xl mb-4">&#x1F4E7;</div>
+          <h2 className="text-xl md:text-2xl font-bold mb-2 text-white">
+            רוצים לקבל דילים למייל?
+          </h2>
+          <p className="text-gray-400 text-sm mb-6 max-w-md mx-auto">
+            הרשמו וקבלו התראות על הדילים הכי שווים ישירות לתיבת המייל. ללא ספאם, רק דילים אמיתיים.
+          </p>
+          <SubscribeForm />
+        </div>
+      </section>
+
       {/* ===== TELEGRAM CTA ===== */}
       <section className="max-w-4xl mx-auto px-4 pb-20">
         <div className="relative overflow-hidden bg-gradient-to-l from-emerald-600 to-emerald-500 rounded-3xl p-8 md:p-12 text-center shadow-2xl shadow-emerald-500/20">
@@ -332,6 +353,28 @@ export default async function HomePage() {
       </footer>
     </div>
   );
+}
+
+async function fetchHotDeals() {
+  return prisma.product.findMany({
+    where: {
+      isPublished: true,
+      status: "PUBLISHED",
+      score: { gte: 80 },
+    },
+    orderBy: { score: "desc" },
+    take: 5,
+    select: {
+      id: true,
+      titleHe: true,
+      titleEn: true,
+      imageUrl: true,
+      priceCurrent: true,
+      priceOriginal: true,
+      priceILS: true,
+      score: true,
+    },
+  });
 }
 
 async function fetchDeals() {

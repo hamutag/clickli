@@ -113,6 +113,8 @@ model Product {
   posts       Post[]
   clicks      Click[]
   conversions Conversion[]
+  comments    Comment[]
+  reactions   DealReaction[]
 
   @@unique([externalId, storeId])
   @@index([storeId])
@@ -276,9 +278,97 @@ model DailyReport {
 // ============================================
 // הגדרות מערכת
 // ============================================
+// ============================================
+// תגובות מבקרים
+// ============================================
+model Comment {
+  id          String   @id @default(cuid())
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id])
+  nickname    String
+  content     String
+  rating      Int?
+  isApproved  Boolean  @default(false)
+  ipHash      String?
+  createdAt   DateTime @default(now())
+
+  @@index([productId])
+  @@index([isApproved])
+  @@index([createdAt])
+}
+
+// ============================================
+// בקשות דילים
+// ============================================
+model DealRequest {
+  id           String        @id @default(cuid())
+  nickname     String
+  email        String?
+  description  String
+  category     String?
+  maxBudget    Float?
+  platform     String?
+  status       RequestStatus @default(OPEN)
+  adminNote    String?
+  upvotes      Int           @default(0)
+  ipHash       String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([status])
+  @@index([createdAt])
+  @@index([upvotes])
+}
+
+enum RequestStatus {
+  OPEN
+  IN_PROGRESS
+  FULFILLED
+  CLOSED
+}
+
+// ============================================
+// תגובות לייק/דיסלייק
+// ============================================
+model DealReaction {
+  id          String       @id @default(cuid())
+  productId   String
+  product     Product      @relation(fields: [productId], references: [id])
+  type        ReactionType
+  ipHash      String
+  createdAt   DateTime     @default(now())
+
+  @@unique([productId, ipHash])
+  @@index([productId])
+}
+
+enum ReactionType {
+  LIKE
+  DISLIKE
+}
+
+// ============================================
+// הגדרות מערכת
+// ============================================
 model SystemSetting {
   id        String   @id @default(cuid())
   key       String   @unique
   value     Json
   updatedAt DateTime @updatedAt
+}
+
+// ============================================
+// מנויים לדילים
+// ============================================
+model Subscriber {
+  id           String   @id @default(cuid())
+  email        String?  @unique
+  telegramId   String?  @unique
+  categories   String?  // JSON array of category slugs
+  minScore     Int      @default(70) // only notify for deals above this score
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([isActive])
 }

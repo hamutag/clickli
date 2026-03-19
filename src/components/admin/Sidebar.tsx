@@ -15,14 +15,20 @@ import {
   Wallet,
   LogOut,
   X,
+  Users,
+  MessageSquare,
+  HandHelping,
 } from "lucide-react";
 
 const navItems = [
   { href: "/admin", label: "דשבורד", icon: LayoutDashboard },
   { href: "/admin/deals", label: "דילים", icon: ShoppingBag },
+  { href: "/admin/comments", label: "תגובות", icon: MessageSquare },
+  { href: "/admin/requests", label: "בקשות", icon: HandHelping },
   { href: "/admin/platforms", label: "פלטפורמות", icon: Store },
   { href: "/admin/analytics", label: "אנליטיקס", icon: BarChart3 },
   { href: "/admin/telegram", label: "טלגרם", icon: Send },
+  { href: "/admin/subscribers", label: "מנויים", icon: Users },
   { href: "/admin/growth", label: "צמיחה", icon: TrendingUp },
   { href: "/admin/affiliate-guide", label: "אפילייט", icon: Wallet },
   { href: "/admin/settings", label: "הגדרות", icon: Settings },

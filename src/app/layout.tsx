@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import Navbar from "@/components/Navbar";
 import Analytics from "@/components/Analytics";
+import FloatingTelegramButton from "@/components/FloatingTelegramButton";
 import "./globals.css";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://clickly.co.il";
@@ -94,6 +95,7 @@ export default function RootLayout({
         <Navbar />
 
         {children}
+        <FloatingTelegramButton />
       </body>
     </html>
   );

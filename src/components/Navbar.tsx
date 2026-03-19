@@ -13,6 +13,7 @@ interface NavLink {
 
 const navLinks: NavLink[] = [
   { href: "/deals", label: "דילים" },
+  { href: "/requests", label: "בקשות" },
   { href: "https://t.me/clickli26", label: "טלגרם", external: true },
   { href: "/admin", label: "אדמין", muted: true },
 ];
