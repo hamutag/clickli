@@ -4,6 +4,10 @@ const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || "";
 const CHANNEL_ID = process.env.TELEGRAM_CHANNEL_ID || "";
 const TELEGRAM_API = `https://api.telegram.org/bot${BOT_TOKEN}`;
 
+// ============================================
+// Telegram Bot API Type Definitions
+// ============================================
+
 interface TelegramResponse {
   ok: boolean;
   result?: {
@@ -11,6 +15,16 @@ interface TelegramResponse {
     chat: { id: number };
   };
   description?: string;
+}
+
+export interface InlineKeyboardButton {
+  text: string;
+  url?: string;
+  callback_data?: string;
+}
+
+export interface InlineKeyboardMarkup {
+  inline_keyboard: InlineKeyboardButton[][];
 }
 
 // שליחת פוסט לערוץ טלגרם
@@ -102,6 +116,88 @@ export async function deleteTelegramMessage(messageId: string): Promise<boolean>
     return data.ok;
   } catch {
     return false;
+  }
+}
+
+// שליחת הודעה עם כפתורים (inline keyboard)
+export async function sendMessageWithButtons(
+  chatId: number | string,
+  text: string,
+  buttons: InlineKeyboardMarkup
+): Promise<string | null> {
+  try {
+    const response = await fetch(`${TELEGRAM_API}/sendMessage`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        chat_id: chatId,
+        text,
+        parse_mode: "HTML",
+        reply_markup: buttons,
+      }),
+    });
+
+    const data: TelegramResponse = await response.json();
+    if (!data.ok) {
+      console.error("Telegram sendMessageWithButtons error:", data.description);
+      return null;
+    }
+
+    return data.result?.message_id?.toString() ?? null;
+  } catch (error) {
+    console.error("sendMessageWithButtons failed:", error);
+    return null;
+  }
+}
+
+// מענה על callback query (לחיצת כפתור)
+export async function answerCallbackQuery(
+  callbackQueryId: string,
+  text?: string
+): Promise<boolean> {
+  try {
+    const response = await fetch(`${TELEGRAM_API}/answerCallbackQuery`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        callback_query_id: callbackQueryId,
+        text,
+      }),
+    });
+
+    const data = await response.json();
+    return data.ok;
+  } catch {
+    return false;
+  }
+}
+
+// שליחת הודעה פשוטה לצ'אט ספציפי
+export async function sendBotMessage(
+  chatId: number | string,
+  text: string
+): Promise<string | null> {
+  try {
+    const response = await fetch(`${TELEGRAM_API}/sendMessage`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        chat_id: chatId,
+        text,
+        parse_mode: "HTML",
+      }),
+    });
+
+    const data: TelegramResponse = await response.json();
+    if (!data.ok) {
+      console.error("Telegram sendBotMessage error:", data.description);
+      return null;
+    }
+
+    return data.result?.message_id?.toString() ?? null;
+  } catch (error) {
+    console.error("sendBotMessage failed:", error);
+    return null;
   }
 }
 
