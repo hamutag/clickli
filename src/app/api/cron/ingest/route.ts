@@ -1,10 +1,39 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { ingestAliExpressDeals } from "@/lib/platforms/aliexpress";
 import { ingestTemuDeals } from "@/lib/platforms/temu";
 import { ingestIHerbDeals } from "@/lib/platforms/iherb";
 
-// POST /api/cron/ingest - הפעלת סריקה ידנית או אוטומטית
-export async function POST() {
+function verifyCronSecret(request: NextRequest): boolean {
+  const authHeader = request.headers.get("authorization");
+  const cronSecret = process.env.CRON_SECRET;
+
+  if (!cronSecret) {
+    console.error("CRON_SECRET environment variable is not set");
+    return false;
+  }
+
+  return authHeader === `Bearer ${cronSecret}`;
+}
+
+// GET /api/cron/ingest - Vercel Cron invokes GET by default
+export async function GET(request: NextRequest) {
+  if (!verifyCronSecret(request)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  return runIngest();
+}
+
+// POST /api/cron/ingest - manual trigger
+export async function POST(request: NextRequest) {
+  if (!verifyCronSecret(request)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  return runIngest();
+}
+
+async function runIngest() {
   const results = await Promise.allSettled([
     ingestAliExpressDeals(),
     ingestTemuDeals(),

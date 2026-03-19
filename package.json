@@ -4,7 +4,7 @@
   "description": "קליקלי - פלטפורמת אפילייט אוטומטית לשוק הישראלי",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --webpack",
     "build": "prisma generate && next build",
     "vercel-build": "prisma generate && next build",
     "start": "next start",

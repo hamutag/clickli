@@ -1,1 +1,16 @@
-{"version":2,"buildCommand":"prisma generate && next build","framework":"nextjs","installCommand":"npm install"}
+{
+  "version": 2,
+  "buildCommand": "prisma generate && next build",
+  "framework": "nextjs",
+  "installCommand": "npm install",
+  "crons": [
+    {
+      "path": "/api/cron/publish",
+      "schedule": "0 8,12,17 * * *"
+    },
+    {
+      "path": "/api/cron/daily-report",
+      "schedule": "0 23 * * *"
+    }
+  ]
+}

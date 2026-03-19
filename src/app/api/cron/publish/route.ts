@@ -1,12 +1,41 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { generateTelegramContent, generateWebContent } from "@/lib/ai-content";
 import { sendTelegramPost, canPostToday } from "@/lib/telegram";
 import { createTrackingLink } from "@/lib/tracking";
 import { getExchangeRate } from "@/lib/currency";
 
-// POST /api/cron/publish - פרסום אוטומטי של דילים מאושרים
-export async function POST() {
+function verifyCronSecret(request: NextRequest): boolean {
+  const authHeader = request.headers.get("authorization");
+  const cronSecret = process.env.CRON_SECRET;
+
+  if (!cronSecret) {
+    console.error("CRON_SECRET environment variable is not set");
+    return false;
+  }
+
+  return authHeader === `Bearer ${cronSecret}`;
+}
+
+// GET /api/cron/publish - Vercel Cron invokes GET by default
+export async function GET(request: NextRequest) {
+  if (!verifyCronSecret(request)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  return runPublish();
+}
+
+// POST /api/cron/publish - manual trigger
+export async function POST(request: NextRequest) {
+  if (!verifyCronSecret(request)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  return runPublish();
+}
+
+async function runPublish() {
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
 

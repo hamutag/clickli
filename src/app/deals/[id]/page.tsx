@@ -21,9 +21,40 @@ export async function generateMetadata({ params }: DealPageProps): Promise<Metad
     where: { productId: id, channel: "WEB" },
   });
 
+  const title = post?.titleHe || product.titleHe || product.titleEn;
+  const description =
+    post?.metaDescription ||
+    `${title} במחיר מיוחד עם משלוח לישראל. מחיר: $${product.priceCurrent.toFixed(2)}`;
+
   return {
-    title: `${post?.titleHe || product.titleHe || product.titleEn} - קליקלי`,
-    description: post?.metaDescription || `${product.titleEn} במחיר מיוחד עם משלוח לישראל`,
+    title: `${title} | קליקלי`,
+    description,
+    alternates: {
+      canonical: `/deals/${id}`,
+    },
+    openGraph: {
+      title: `${title} | קליקלי`,
+      description,
+      type: "website",
+      locale: "he_IL",
+      siteName: "קליקלי",
+      ...(product.imageUrl && {
+        images: [
+          {
+            url: product.imageUrl,
+            width: 800,
+            height: 800,
+            alt: title,
+          },
+        ],
+      }),
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${title} | קליקלי`,
+      description,
+      ...(product.imageUrl && { images: [product.imageUrl] }),
+    },
   };
 }
 
@@ -51,8 +82,37 @@ export default async function DealPage({ params }: DealPageProps) {
 
   const trackingLink = createTrackingLink(product.id, post?.id ?? null, "WEB");
 
+  const productTitle = post?.titleHe || product.titleHe || product.titleEn;
+  const productDescription =
+    post?.bodyHe || product.descriptionHe || product.titleEn || "";
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: productTitle,
+    ...(product.imageUrl && { image: product.imageUrl }),
+    description: productDescription,
+    offers: {
+      "@type": "Offer",
+      price: product.priceCurrent,
+      priceCurrency: "USD",
+      availability: "https://schema.org/InStock",
+    },
+    ...(product.rating && {
+      aggregateRating: {
+        "@type": "AggregateRating",
+        ratingValue: product.rating,
+        reviewCount: product.reviewCount,
+      },
+    }),
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       {/* Header */}
       <header className="border-b bg-white">
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">

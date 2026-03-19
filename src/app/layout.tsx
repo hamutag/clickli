@@ -1,8 +1,18 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import Link from "next/link";
 import "./globals.css";
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://clickly.co.il";
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  themeColor: "#10B981",
+};
+
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: {
     default: "קליקלי | הדילים הכי שווים מ-AliExpress, Temu ו-iHerb",
     template: "%s | קליקלי",
@@ -23,6 +33,9 @@ export const metadata: Metadata = {
     "הנחות",
     "דילים מחו\"ל",
   ],
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
     title: "קליקלי | הדילים הכי שווים מ-AliExpress, Temu ו-iHerb",
     description:
@@ -30,6 +43,7 @@ export const metadata: Metadata = {
     type: "website",
     locale: "he_IL",
     siteName: "קליקלי",
+    url: SITE_URL,
   },
   twitter: {
     card: "summary_large_image",
@@ -40,7 +54,15 @@ export const metadata: Metadata = {
   robots: {
     index: true,
     follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
   },
+  manifest: "/manifest.json",
 };
 
 export default function RootLayout({

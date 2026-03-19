@@ -6,8 +6,20 @@ import { getDealTier } from "@/lib/scoring";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "כל הדילים - קליקלי",
-  description: "הדילים הכי שווים מ-AliExpress, Temu ו-iHerb עם מחירים בשקלים כולל משלוח ומע\"מ",
+  title: "כל הדילים | קליקלי",
+  description:
+    "גלו את הדילים הכי שווים מ-AliExpress, Temu ו-iHerb. מחירים בשקלים כולל משלוח ומע\"מ. קופונים בלעדיים והנחות מעולות כל יום.",
+  alternates: {
+    canonical: "/deals",
+  },
+  openGraph: {
+    title: "כל הדילים | קליקלי",
+    description:
+      "גלו את הדילים הכי שווים מ-AliExpress, Temu ו-iHerb. מחירים בשקלים, משלוח לישראל, קופונים בלעדיים.",
+    type: "website",
+    locale: "he_IL",
+    siteName: "קליקלי",
+  },
 };
 
 interface DealsPageProps {

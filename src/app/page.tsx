@@ -42,8 +42,45 @@ export default async function HomePage() {
       }))
     : CATEGORIES;
 
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://clickly.co.il";
+
+  const organizationJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: "קליקלי",
+    url: siteUrl,
+    logo: `${siteUrl}/logo.png`,
+    description:
+      "קליקלי - מוצאים לכם את הדילים הכי שווים מ-AliExpress, Temu ו-iHerb. מחירים בשקלים, משלוח לישראל, קופונים בלעדיים.",
+    sameAs: ["https://t.me/clickli26"],
+  };
+
+  const websiteJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "קליקלי",
+    url: siteUrl,
+    inLanguage: "he-IL",
+    potentialAction: {
+      "@type": "SearchAction",
+      target: {
+        "@type": "EntryPoint",
+        urlTemplate: `${siteUrl}/deals?q={search_term_string}`,
+      },
+      "query-input": "required name=search_term_string",
+    },
+  };
+
   return (
     <div className="min-h-screen bg-gray-950 text-white" dir="rtl">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
+      />
       {/* ===== HERO SECTION ===== */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-bl from-emerald-900/40 via-gray-950 to-gray-950" />
