@@ -11,6 +11,7 @@ import {
   Settings,
   Globe,
   TrendingUp,
+  Wallet,
   LogOut,
 } from "lucide-react";
 
@@ -21,6 +22,7 @@ const navItems = [
   { href: "/admin/analytics", label: "אנליטיקס", icon: BarChart3 },
   { href: "/admin/telegram", label: "טלגרם", icon: Send },
   { href: "/admin/growth", label: "צמיחה", icon: TrendingUp },
+  { href: "/admin/affiliate-guide", label: "אפילייט", icon: Wallet },
   { href: "/admin/settings", label: "הגדרות", icon: Settings },
 ];
 

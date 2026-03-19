@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Sparkles, Save, Loader2 } from "lucide-react";
+import { ArrowRight, Sparkles, Save, Loader2, Search } from "lucide-react";
 import Link from "next/link";
 
 interface CategoryOption {
@@ -63,6 +63,7 @@ export default function NewDealPage() {
   const [categories, setCategories] = useState<CategoryOption[]>([]);
   const [loading, setLoading] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
+  const [scrapeLoading, setScrapeLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -124,6 +125,43 @@ export default function NewDealPage() {
       setError("שגיאה ביצירת תיאור AI. נסה שוב.");
     } finally {
       setAiLoading(false);
+    }
+  };
+
+  const handleScrape = async () => {
+    if (!form.productUrl) {
+      setError("נא להזין קישור למוצר לפני סריקה");
+      return;
+    }
+    setScrapeLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/admin/scrape", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: form.productUrl }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "שגיאה בסריקת הכתובת");
+      }
+      const { product } = await res.json();
+      setForm((prev) => ({
+        ...prev,
+        titleEn: product.title || prev.titleEn,
+        titleHe: prev.titleHe || product.title || "",
+        descriptionHe: prev.descriptionHe || product.description || "",
+        imageUrl: product.imageUrl || prev.imageUrl,
+        priceCurrent: product.price != null ? String(product.price) : prev.priceCurrent,
+        priceOriginal: prev.priceOriginal || (product.price != null ? String(product.price) : ""),
+        rating: product.rating != null ? String(product.rating) : prev.rating,
+        reviewCount: product.reviewCount != null ? String(product.reviewCount) : prev.reviewCount,
+        platform: product.platform || prev.platform,
+      }));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "שגיאה בסריקת הכתובת");
+    } finally {
+      setScrapeLoading(false);
     }
   };
 
@@ -266,16 +304,31 @@ export default function NewDealPage() {
               <label htmlFor="productUrl" className={labelClass}>
                 קישור למוצר *
               </label>
-              <input
-                id="productUrl"
-                name="productUrl"
-                type="url"
-                value={form.productUrl}
-                onChange={handleChange}
-                placeholder="https://www.aliexpress.com/item/..."
-                className={inputClass}
-                dir="ltr"
-              />
+              <div className="flex gap-2">
+                <input
+                  id="productUrl"
+                  name="productUrl"
+                  type="url"
+                  value={form.productUrl}
+                  onChange={handleChange}
+                  placeholder="https://www.aliexpress.com/item/..."
+                  className={inputClass + " flex-1"}
+                  dir="ltr"
+                />
+                <button
+                  type="button"
+                  onClick={handleScrape}
+                  disabled={scrapeLoading || !form.productUrl}
+                  className="flex items-center gap-1.5 whitespace-nowrap bg-emerald-600/20 text-emerald-400 px-4 py-2.5 rounded-lg hover:bg-emerald-600/30 transition-colors disabled:opacity-50 border border-emerald-700/50"
+                >
+                  {scrapeLoading ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Search className="w-4 h-4" />
+                  )}
+                  {scrapeLoading ? "סורק..." : "סרוק URL"}
+                </button>
+              </div>
             </div>
 
             {/* Title Hebrew */}
