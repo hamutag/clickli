@@ -4,171 +4,181 @@ import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { getDealTier } from "@/lib/scoring";
 
+const CATEGORIES = [
+  { name: "אלקטרוניקה", icon: "🎧", slug: "electronics" },
+  { name: "בריאות ויופי", icon: "💊", slug: "health" },
+  { name: "בית וגן", icon: "🏠", slug: "home" },
+  { name: "אופנה", icon: "👗", slug: "fashion" },
+  { name: "ספורט", icon: "🏃", slug: "sports" },
+  { name: "ילדים ותינוקות", icon: "🧸", slug: "kids" },
+  { name: "כלי מטבח", icon: "🍳", slug: "kitchen" },
+  { name: "אביזרי רכב", icon: "🚗", slug: "car" },
+] as const;
+
 export default async function HomePage() {
-  const [featuredDeals, totalDeals, totalStores] = await Promise.all([
+  const [featuredDeals, categories] = await Promise.all([
     prisma.product.findMany({
       where: { isPublished: true, status: "PUBLISHED" },
       orderBy: { score: "desc" },
       take: 6,
       include: {
         store: { select: { name: true, platform: true } },
-        category: { select: { nameHe: true } },
+        category: { select: { nameHe: true, slug: true } },
       },
     }),
-    prisma.product.count({ where: { isPublished: true } }),
-    prisma.store.count({ where: { isActive: true } }),
+    prisma.category.findMany({
+      where: { isActive: true, parentId: null },
+      orderBy: { demandScore: "desc" },
+      take: 8,
+      select: { nameHe: true, slug: true, icon: true },
+    }),
   ]);
 
+  const displayCategories = categories.length > 0
+    ? categories.map((c) => ({
+        name: c.nameHe,
+        icon: c.icon || "📦",
+        slug: c.slug,
+      }))
+    : CATEGORIES;
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 via-white to-gray-50">
-      {/* Header */}
-      <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <Link href="/" className="text-2xl font-bold text-blue-600">
-            🛒 קליקלי
-          </Link>
-          <nav className="hidden md:flex gap-6 text-sm">
-            <Link href="/deals" className="hover:text-blue-600 transition-colors font-medium">
-              כל הדילים
-            </Link>
-            <Link href="/deals?cat=women" className="hover:text-blue-600 transition-colors">
-              לנשים
-            </Link>
-            <Link href="/deals?cat=home" className="hover:text-blue-600 transition-colors">
-              לבית
-            </Link>
-            <Link href="/deals?cat=health" className="hover:text-blue-600 transition-colors">
-              בריאות
-            </Link>
-            <Link href="/deals?cat=tech" className="hover:text-blue-600 transition-colors">
-              טכנולוגיה
-            </Link>
-          </nav>
-          <Link
-            href="/deals"
-            className="md:hidden text-sm bg-blue-600 text-white px-4 py-2 rounded-lg"
-          >
-            כל הדילים
-          </Link>
-        </div>
-      </header>
+    <div className="min-h-screen bg-gray-950 text-white" dir="rtl">
+      {/* ===== HERO SECTION ===== */}
+      <section className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-bl from-emerald-900/40 via-gray-950 to-gray-950" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-emerald-500/10 rounded-full blur-3xl" />
 
-      {/* Hero */}
-      <section className="max-w-7xl mx-auto px-4 pt-16 pb-12 text-center">
-        <div className="inline-block bg-orange-100 text-orange-700 text-sm font-medium px-4 py-1.5 rounded-full mb-6">
-          🔥 {totalDeals} דילים פעילים מ-{totalStores} חנויות
-        </div>
-        <h2 className="text-4xl md:text-6xl font-extrabold mb-5 leading-tight">
-          הדילים הכי שווים מחו&quot;ל
-          <br />
-          <span className="bg-gradient-to-l from-blue-600 to-blue-400 bg-clip-text text-transparent">
-            עם מחירים בשקלים
-          </span>
-        </h2>
-        <p className="text-lg text-gray-500 mb-10 max-w-2xl mx-auto leading-relaxed">
-          אנחנו סורקים את AliExpress, Temu ו-iHerb ומביאים רק את הדילים שבאמת שווים.
-          <br />
-          מחיר סופי כולל משלוח ומע&quot;מ. בלי הפתעות.
-        </p>
-        <div className="flex gap-4 justify-center flex-wrap">
-          <Link
-            href="/deals"
-            className="bg-blue-600 text-white px-8 py-3.5 rounded-xl text-lg font-semibold hover:bg-blue-700 transition-all hover:shadow-lg hover:shadow-blue-200"
-          >
-            לכל הדילים →
-          </Link>
-          <a
-            href="https://t.me/clickli26"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="border-2 border-blue-200 text-blue-600 px-8 py-3.5 rounded-xl text-lg font-semibold hover:bg-blue-50 transition-all"
-          >
-            📱 ערוץ טלגרם
-          </a>
-        </div>
-      </section>
+        <div className="relative max-w-7xl mx-auto px-4 pt-24 pb-20 md:pt-32 md:pb-28 text-center">
+          <div className="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm font-medium px-5 py-2 rounded-full mb-8">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+            </span>
+            דילים מתעדכנים כל יום
+          </div>
 
-      {/* Live Stats Bar */}
-      <section className="max-w-4xl mx-auto px-4 mb-12">
-        <div className="grid grid-cols-3 gap-4">
-          <div className="bg-white rounded-xl p-4 border text-center shadow-sm">
-            <div className="text-2xl font-bold text-blue-600">{totalDeals}</div>
-            <div className="text-xs text-gray-500 mt-1">דילים פעילים</div>
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold leading-tight mb-6">
+            הדילים הכי שווים
+            <br />
+            <span className="bg-gradient-to-l from-emerald-400 to-green-300 bg-clip-text text-transparent">
+              מהעולם 🔥
+            </span>
+          </h1>
+
+          <p className="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto mb-10 leading-relaxed">
+            חוסכים כסף על קניות מ-AliExpress, Temu ו-iHerb.
+            <br className="hidden md:block" />
+            מחירים בשקלים, משלוח לישראל, קופונים בלעדיים.
+          </p>
+
+          <div className="flex gap-4 justify-center flex-wrap">
+            <Link
+              href="/deals"
+              className="bg-emerald-500 hover:bg-emerald-400 text-gray-950 px-8 py-4 rounded-2xl text-lg font-bold transition-all hover:shadow-lg hover:shadow-emerald-500/25 hover:-translate-y-0.5"
+            >
+              לכל הדילים &larr;
+            </Link>
+            <a
+              href="https://t.me/clickli26"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="border-2 border-gray-700 hover:border-emerald-500/50 text-gray-300 hover:text-emerald-400 px-8 py-4 rounded-2xl text-lg font-semibold transition-all"
+            >
+              📱 ערוץ טלגרם
+            </a>
           </div>
-          <div className="bg-white rounded-xl p-4 border text-center shadow-sm">
-            <div className="text-2xl font-bold text-green-600">{totalStores}</div>
-            <div className="text-xs text-gray-500 mt-1">חנויות מחוברות</div>
-          </div>
-          <div className="bg-white rounded-xl p-4 border text-center shadow-sm">
-            <div className="text-2xl font-bold text-orange-500">₪</div>
-            <div className="text-xs text-gray-500 mt-1">מחירים בשקלים</div>
+
+          {/* Trust indicators */}
+          <div className="flex items-center justify-center gap-6 md:gap-10 mt-14 text-sm text-gray-500">
+            <span className="flex items-center gap-1.5">✅ משלוח לישראל</span>
+            <span className="flex items-center gap-1.5">💰 מחירים בשקלים</span>
+            <span className="flex items-center gap-1.5">🎟️ קופונים בלעדיים</span>
           </div>
         </div>
       </section>
 
-      {/* Featured Deals */}
+      {/* ===== FEATURED DEALS ===== */}
       {featuredDeals.length > 0 && (
-        <section className="max-w-7xl mx-auto px-4 pb-16">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-2xl font-bold">🔥 דילים חמים עכשיו</h3>
-            <Link href="/deals" className="text-blue-600 text-sm hover:underline font-medium">
-              הצג הכל →
+        <section className="max-w-7xl mx-auto px-4 py-16 md:py-20">
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-2xl md:text-3xl font-bold">
+              🔥 דילים חמים עכשיו
+            </h2>
+            <Link
+              href="/deals"
+              className="text-emerald-400 hover:text-emerald-300 text-sm font-medium transition-colors"
+            >
+              הצג הכל &larr;
             </Link>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
             {featuredDeals.map((deal) => {
               const tier = getDealTier(deal.score);
-              const savingsPercent = deal.priceOriginal > 0
-                ? Math.round(((deal.priceOriginal - deal.priceCurrent) / deal.priceOriginal) * 100)
-                : 0;
+              const savingsPercent =
+                deal.priceOriginal > 0
+                  ? Math.round(
+                      ((deal.priceOriginal - deal.priceCurrent) /
+                        deal.priceOriginal) *
+                        100
+                    )
+                  : 0;
 
               return (
                 <Link
                   key={deal.id}
                   href={`/deals/${deal.id}`}
-                  className="bg-white rounded-xl border overflow-hidden hover:shadow-xl transition-all group hover:-translate-y-1"
+                  className="group bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden hover:border-emerald-500/40 transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-emerald-500/5"
                 >
                   {/* Image */}
-                  <div className="relative aspect-square bg-gray-100 overflow-hidden">
+                  <div className="relative aspect-square bg-gray-800 overflow-hidden">
                     {deal.imageUrl ? (
                       <img
                         src={deal.imageUrl}
                         alt={deal.titleHe || deal.titleEn}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-6xl bg-gradient-to-br from-blue-50 to-blue-100">
-                        {deal.category?.nameHe === "אלקטרוניקה" ? "🎧" :
-                         deal.category?.nameHe === "בריאות ויופי" ? "💊" :
-                         deal.category?.nameHe === "בית וגן" ? "🏠" : "📦"}
+                      <div className="w-full h-full flex items-center justify-center text-6xl bg-gradient-to-br from-gray-800 to-gray-900">
+                        📦
                       </div>
                     )}
+
+                    {/* Discount badge */}
                     {savingsPercent > 0 && (
-                      <span className="absolute top-2 right-2 bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded-lg shadow-sm">
+                      <span className="absolute top-3 right-3 bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded-lg shadow-lg">
                         -{savingsPercent}%
                       </span>
                     )}
-                    {deal.score >= 80 && (
-                      <span className="absolute top-2 left-2 text-lg drop-shadow">{tier.emoji}</span>
+
+                    {/* Score tier emoji */}
+                    {deal.score >= 60 && (
+                      <span className="absolute top-3 left-3 text-xl drop-shadow-lg">
+                        {tier.emoji}
+                      </span>
                     )}
-                    <span className="absolute bottom-2 right-2 bg-white/95 text-xs font-medium px-2 py-0.5 rounded shadow-sm">
+
+                    {/* Store badge */}
+                    <span className="absolute bottom-3 right-3 bg-black/70 backdrop-blur-sm text-white text-xs font-medium px-2.5 py-1 rounded-lg">
                       {deal.store.name}
                     </span>
                   </div>
 
                   {/* Info */}
                   <div className="p-4">
-                    <h4 className="text-sm font-medium line-clamp-2 mb-3 min-h-[40px]">
+                    <h3 className="text-sm font-medium text-gray-200 line-clamp-2 mb-3 min-h-[40px] leading-relaxed">
                       {deal.titleHe || deal.titleEn}
-                    </h4>
+                    </h3>
 
                     <div className="flex items-baseline gap-2 mb-2">
-                      <span className="text-xl font-bold text-green-600">
-                        {deal.priceILS ? `₪${Math.round(deal.priceILS)}` : `$${deal.priceCurrent.toFixed(2)}`}
+                      <span className="text-xl font-bold text-emerald-400">
+                        {deal.priceILS
+                          ? `₪${Math.round(deal.priceILS)}`
+                          : `$${deal.priceCurrent.toFixed(2)}`}
                       </span>
                       {savingsPercent > 0 && (
-                        <span className="text-xs text-gray-400 line-through">
+                        <span className="text-xs text-gray-500 line-through">
                           {deal.priceILS
                             ? `₪${Math.round(deal.priceOriginal * 3.65)}`
                             : `$${deal.priceOriginal.toFixed(2)}`}
@@ -176,20 +186,31 @@ export default async function HomePage() {
                       )}
                     </div>
 
-                    <div className="flex items-center justify-between text-xs text-gray-400">
+                    <div className="flex items-center justify-between text-xs text-gray-500">
                       <span>
-                        {deal.shippingFree ? "✅ משלוח חינם" : "📦 משלוח בתשלום"}
+                        {deal.shippingFree
+                          ? "✅ משלוח חינם"
+                          : "📦 משלוח בתשלום"}
                       </span>
                       {deal.rating && (
-                        <span>⭐ {deal.rating.toFixed(1)} ({deal.reviewCount.toLocaleString()})</span>
+                        <span>
+                          ⭐ {deal.rating.toFixed(1)} (
+                          {deal.reviewCount.toLocaleString()})
+                        </span>
                       )}
                     </div>
 
                     {deal.couponCode && (
-                      <div className="mt-2 bg-orange-50 border border-orange-200 rounded-lg px-2 py-1.5 text-xs text-orange-700 text-center font-medium">
+                      <div className="mt-3 bg-emerald-500/10 border border-emerald-500/20 rounded-lg px-2.5 py-1.5 text-xs text-emerald-400 text-center font-medium">
                         🎟️ קופון: {deal.couponCode}
                       </div>
                     )}
+
+                    <div className="mt-3 text-center">
+                      <span className="inline-block bg-emerald-500/10 text-emerald-400 text-xs font-semibold px-4 py-1.5 rounded-lg group-hover:bg-emerald-500 group-hover:text-gray-950 transition-all">
+                        לדיל &larr;
+                      </span>
+                    </div>
                   </div>
                 </Link>
               );
@@ -198,108 +219,142 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* Features */}
-      <section className="bg-white border-t border-b">
-        <div className="max-w-7xl mx-auto px-4 py-16">
-          <h3 className="text-2xl font-bold text-center mb-10">למה קליקלי?</h3>
-          <div className="grid md:grid-cols-3 gap-8">
+      {/* ===== HOW IT WORKS ===== */}
+      <section className="bg-gray-900/50 border-t border-b border-gray-800">
+        <div className="max-w-7xl mx-auto px-4 py-16 md:py-20">
+          <h2 className="text-2xl md:text-3xl font-bold text-center mb-12">
+            איך זה עובד?
+          </h2>
+          <div className="grid md:grid-cols-3 gap-8 md:gap-12">
             <div className="text-center">
-              <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4">
-                💰
+              <div className="w-20 h-20 bg-emerald-500/10 border border-emerald-500/20 rounded-3xl flex items-center justify-center text-4xl mx-auto mb-5">
+                🔍
               </div>
-              <h4 className="font-bold text-lg mb-2">מחיר סופי בשקלים</h4>
-              <p className="text-gray-500 text-sm leading-relaxed">
-                כולל משלוח, המרת מטבע ומע&quot;מ כשצריך. מה שאתם רואים זה מה שתשלמו.
+              <h3 className="text-lg font-bold mb-2 text-white">מוצאים דיל</h3>
+              <p className="text-gray-400 text-sm leading-relaxed">
+                אנחנו סורקים אלפי מוצרים כל יום מ-AliExpress, Temu ו-iHerb
+                ומוצאים את ההנחות האמיתיות.
               </p>
             </div>
             <div className="text-center">
-              <div className="w-16 h-16 bg-orange-100 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4">
-                🔥
-              </div>
-              <h4 className="font-bold text-lg mb-2">רק דילים שווים</h4>
-              <p className="text-gray-500 text-sm leading-relaxed">
-                מערכת ציון חכמה שמסננת ומביאה רק מוצרים עם הנחה אמיתית, דירוג גבוה ומשלוח לישראל.
-              </p>
-            </div>
-            <div className="text-center">
-              <div className="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4">
+              <div className="w-20 h-20 bg-emerald-500/10 border border-emerald-500/20 rounded-3xl flex items-center justify-center text-4xl mx-auto mb-5">
                 ⭐
               </div>
-              <h4 className="font-bold text-lg mb-2">ביקורות אמיתיות</h4>
-              <p className="text-gray-500 text-sm leading-relaxed">
-                דירוג ומספר ביקורות מהחנות המקורית, כדי שתדעו בדיוק מה אתם מקבלים.
+              <h3 className="text-lg font-bold mb-2 text-white">
+                בודקים ומדרגים
+              </h3>
+              <p className="text-gray-400 text-sm leading-relaxed">
+                רק דילים עם ציון 60+ מגיעים אליכם. בודקים דירוגים, ביקורות,
+                משלוח לישראל ומחיר סופי.
+              </p>
+            </div>
+            <div className="text-center">
+              <div className="w-20 h-20 bg-emerald-500/10 border border-emerald-500/20 rounded-3xl flex items-center justify-center text-4xl mx-auto mb-5">
+                💰
+              </div>
+              <h3 className="text-lg font-bold mb-2 text-white">חוסכים כסף</h3>
+              <p className="text-gray-400 text-sm leading-relaxed">
+                קונים במחיר הכי טוב עם קופונים בלעדיים. מחיר סופי בשקלים כולל
+                משלוח.
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Stores Section */}
-      <section className="max-w-7xl mx-auto px-4 py-16">
-        <h3 className="text-2xl font-bold text-center mb-8">החנויות שלנו</h3>
-        <div className="grid grid-cols-3 gap-6 max-w-xl mx-auto">
-          <Link
-            href="/deals?store=aliexpress"
-            className="bg-white rounded-xl p-6 border text-center hover:shadow-lg transition-all hover:-translate-y-1"
-          >
-            <div className="text-3xl mb-2">🛍️</div>
-            <div className="font-bold text-sm">AliExpress</div>
-            <div className="text-xs text-gray-400 mt-1">עד 8% קומיסיה</div>
-          </Link>
-          <Link
-            href="/deals?store=temu"
-            className="bg-white rounded-xl p-6 border text-center hover:shadow-lg transition-all hover:-translate-y-1"
-          >
-            <div className="text-3xl mb-2">🧡</div>
-            <div className="font-bold text-sm">Temu</div>
-            <div className="text-xs text-gray-400 mt-1">עד 15% קומיסיה</div>
-          </Link>
-          <Link
-            href="/deals?store=iherb"
-            className="bg-white rounded-xl p-6 border text-center hover:shadow-lg transition-all hover:-translate-y-1"
-          >
-            <div className="text-3xl mb-2">💚</div>
-            <div className="font-bold text-sm">iHerb</div>
-            <div className="text-xs text-gray-400 mt-1">עד 5% קומיסיה</div>
-          </Link>
+      {/* ===== CATEGORIES GRID ===== */}
+      <section className="max-w-7xl mx-auto px-4 py-16 md:py-20">
+        <h2 className="text-2xl md:text-3xl font-bold text-center mb-10">
+          קטגוריות פופולריות
+        </h2>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          {displayCategories.map((cat) => (
+            <Link
+              key={cat.slug}
+              href={`/deals?cat=${cat.slug}`}
+              className="group bg-gray-900 border border-gray-800 rounded-2xl p-6 text-center hover:border-emerald-500/40 hover:bg-gray-900/80 transition-all hover:-translate-y-1"
+            >
+              <div className="text-4xl mb-3 group-hover:scale-110 transition-transform">
+                {cat.icon}
+              </div>
+              <div className="font-semibold text-sm text-gray-300 group-hover:text-emerald-400 transition-colors">
+                {cat.name}
+              </div>
+            </Link>
+          ))}
         </div>
       </section>
 
-      {/* Telegram CTA */}
-      <section className="max-w-3xl mx-auto px-4 pb-16">
-        <div className="bg-gradient-to-l from-blue-600 to-blue-500 rounded-2xl p-8 text-center text-white shadow-xl">
-          <div className="text-4xl mb-4">📱</div>
-          <h3 className="text-2xl font-bold mb-3">הצטרפו לערוץ הטלגרם</h3>
-          <p className="text-blue-100 mb-6 text-sm">
-            דילים חמים ישירות לנייד. עד 15 דילים ביום, רק הדברים הכי שווים.
-          </p>
-          <a
-            href="https://t.me/clickli26"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-block bg-white text-blue-600 px-8 py-3 rounded-xl text-lg font-semibold hover:bg-blue-50 transition-colors"
-          >
-            הצטרפו עכשיו →
-          </a>
+      {/* ===== TELEGRAM CTA ===== */}
+      <section className="max-w-4xl mx-auto px-4 pb-20">
+        <div className="relative overflow-hidden bg-gradient-to-l from-emerald-600 to-emerald-500 rounded-3xl p-8 md:p-12 text-center shadow-2xl shadow-emerald-500/20">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2" />
+
+          <div className="relative">
+            <div className="text-5xl mb-5">📱</div>
+            <h2 className="text-2xl md:text-3xl font-bold mb-3 text-white">
+              הצטרפו לערוץ הטלגרם שלנו
+            </h2>
+            <p className="text-emerald-100 mb-8 text-sm md:text-base max-w-lg mx-auto">
+              דילים חמים ישירות לנייד. עד 15 דילים ביום, רק הדברים הכי שווים.
+              תהיו הראשונים לדעת!
+            </p>
+            <a
+              href="https://t.me/clickli26"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block bg-white text-emerald-700 px-10 py-4 rounded-2xl text-lg font-bold hover:bg-gray-100 transition-colors hover:shadow-lg"
+            >
+              הצטרפו עכשיו &larr;
+            </a>
+          </div>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t bg-white">
-        <div className="max-w-7xl mx-auto px-4 py-8">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div>
-              <span className="text-xl font-bold text-blue-600">🛒 קליקלי</span>
-              <p className="text-xs text-gray-400 mt-1">המבצעים הכי שווים מחו&quot;ל לישראל</p>
+      {/* ===== FOOTER ===== */}
+      <footer className="border-t border-gray-800 bg-gray-900/50">
+        <div className="max-w-7xl mx-auto px-4 py-10">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="text-center md:text-right">
+              <span className="text-2xl font-bold text-emerald-400">
+                קליקלי
+              </span>
+              <p className="text-sm text-gray-500 mt-1">
+                הדילים הכי שווים מחו&quot;ל לישראל
+              </p>
             </div>
-            <div className="flex gap-6 text-sm text-gray-500">
-              <Link href="/deals" className="hover:text-blue-600">כל הדילים</Link>
-              <a href="https://t.me/clickli26" target="_blank" rel="noopener noreferrer" className="hover:text-blue-600">טלגרם</a>
+            <div className="flex gap-8 text-sm text-gray-400">
+              <Link
+                href="/deals"
+                className="hover:text-emerald-400 transition-colors"
+              >
+                כל הדילים
+              </Link>
+              <a
+                href="https://t.me/clickli26"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-emerald-400 transition-colors"
+              >
+                טלגרם
+              </a>
+              <Link
+                href="/admin"
+                className="hover:text-emerald-400 transition-colors"
+              >
+                אדמין
+              </Link>
             </div>
           </div>
-          <div className="border-t mt-6 pt-6 text-center text-xs text-gray-400">
-            <p>האתר משתמש בקישורי שותפים (Affiliate Links). לא עולה לכם שקל יותר.</p>
-            <p className="mt-1">© {new Date().getFullYear()} קליקלי. כל הזכויות שמורות.</p>
+          <div className="border-t border-gray-800 mt-8 pt-8 text-center text-xs text-gray-600">
+            <p>
+              האתר משתמש בקישורי שותפים (Affiliate Links). לא עולה לכם שקל
+              יותר.
+            </p>
+            <p className="mt-2">
+              &copy; {new Date().getFullYear()} קליקלי. כל הזכויות שמורות.
+            </p>
           </div>
         </div>
       </footer>
