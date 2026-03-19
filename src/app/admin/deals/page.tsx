@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useCallback } from "react";
 import DealsTable from "@/components/admin/DealsTable";
-import { RefreshCw, Download, Plus } from "lucide-react";
+import { RefreshCw, Download, Plus, PackagePlus } from "lucide-react";
+import Link from "next/link";
 
 export default function AdminDealsPage() {
   const [deals, setDeals] = useState([]);
@@ -64,6 +65,13 @@ export default function AdminDealsPage() {
         </div>
 
         <div className="flex gap-2">
+          <Link
+            href="/admin/deals/new"
+            className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700 transition-colors"
+          >
+            <PackagePlus className="w-4 h-4" />
+            הוסף דיל +
+          </Link>
           <button
             onClick={handleBulkIngest}
             disabled={actionLoading === "ingest"}

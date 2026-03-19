@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
   ShoppingBag,
@@ -11,6 +11,7 @@ import {
   Settings,
   Globe,
   TrendingUp,
+  LogOut,
 } from "lucide-react";
 
 const navItems = [
@@ -25,6 +26,13 @@ const navItems = [
 
 export default function AdminSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+
+  async function handleLogout() {
+    await fetch("/api/admin/auth/logout", { method: "POST" });
+    router.push("/admin/login");
+    router.refresh();
+  }
 
   return (
     <aside className="w-64 bg-gray-900 text-white min-h-screen flex flex-col fixed right-0 top-0">
@@ -62,7 +70,7 @@ export default function AdminSidebar() {
       </nav>
 
       {/* Quick Actions */}
-      <div className="p-4 border-t border-gray-700">
+      <div className="p-4 border-t border-gray-700 space-y-3">
         <Link
           href="/"
           target="_blank"
@@ -71,6 +79,13 @@ export default function AdminSidebar() {
           <Globe className="w-4 h-4" />
           <span>צפייה באתר</span>
         </Link>
+        <button
+          onClick={handleLogout}
+          className="flex items-center gap-2 text-sm text-red-400 hover:text-red-300 transition-colors w-full"
+        >
+          <LogOut className="w-4 h-4" />
+          <span>התנתק</span>
+        </button>
       </div>
     </aside>
   );
