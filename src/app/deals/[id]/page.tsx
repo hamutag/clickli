@@ -5,6 +5,7 @@ import { getDealTier } from "@/lib/scoring";
 import { createTrackingLink } from "@/lib/tracking";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import ShareButtons from "@/components/ShareButtons";
 import type { Metadata } from "next";
 
 interface DealPageProps {
@@ -81,6 +82,8 @@ export default async function DealPage({ params }: DealPageProps) {
     : 0;
 
   const trackingLink = createTrackingLink(product.id, post?.id ?? null, "WEB");
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://clickly.co.il";
+  const dealUrl = `${siteUrl}/deals/${product.id}`;
 
   const productTitle = post?.titleHe || product.titleHe || product.titleEn;
   const productDescription =
@@ -252,6 +255,15 @@ export default async function DealPage({ params }: DealPageProps) {
               <p className="text-xs text-center text-gray-400">
                 מפנה ל-{product.store.name} • קישור שותפים
               </p>
+
+              {/* Share Buttons */}
+              <div className="mt-6 pt-4 border-t border-gray-200">
+                <ShareButtons
+                  url={dealUrl}
+                  title={productTitle}
+                  description={productDescription}
+                />
+              </div>
             </div>
           </div>
         </div>

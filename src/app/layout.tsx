@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
-import Link from "next/link";
+import Navbar from "@/components/Navbar";
+import Analytics from "@/components/Analytics";
 import "./globals.css";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://clickly.co.il";
@@ -85,39 +86,9 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-screen antialiased font-sans">
+        <Analytics />
         {/* Top Navbar */}
-        <nav className="sticky top-0 z-50 border-b border-gray-800 bg-gray-950/80 backdrop-blur-xl">
-          <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-            <Link
-              href="/"
-              className="text-xl md:text-2xl font-extrabold text-emerald-400 hover:text-emerald-300 transition-colors"
-            >
-              קליקלי
-            </Link>
-            <div className="flex items-center gap-1 md:gap-2">
-              <Link
-                href="/deals"
-                className="text-sm text-gray-300 hover:text-emerald-400 px-3 py-1.5 rounded-lg hover:bg-gray-800/50 transition-all font-medium"
-              >
-                דילים
-              </Link>
-              <a
-                href="https://t.me/clickli26"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-gray-300 hover:text-emerald-400 px-3 py-1.5 rounded-lg hover:bg-gray-800/50 transition-all font-medium"
-              >
-                טלגרם
-              </a>
-              <Link
-                href="/admin"
-                className="text-sm text-gray-500 hover:text-gray-300 px-3 py-1.5 rounded-lg hover:bg-gray-800/50 transition-all"
-              >
-                אדמין
-              </Link>
-            </div>
-          </div>
-        </nav>
+        <Navbar />
 
         {children}
       </body>

@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 
 import Link from "next/link";
 import { prisma } from "@/lib/db";
-import { getDealTier } from "@/lib/scoring";
+import DealCard from "@/components/DealCard";
 
 const CATEGORIES = [
   { name: "אלקטרוניקה", icon: "🎧", slug: "electronics" },
@@ -151,107 +151,9 @@ export default async function HomePage() {
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
-            {featuredDeals.map((deal) => {
-              const tier = getDealTier(deal.score);
-              const savingsPercent =
-                deal.priceOriginal > 0
-                  ? Math.round(
-                      ((deal.priceOriginal - deal.priceCurrent) /
-                        deal.priceOriginal) *
-                        100
-                    )
-                  : 0;
-
-              return (
-                <Link
-                  key={deal.id}
-                  href={`/deals/${deal.id}`}
-                  className="group bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden hover:border-emerald-500/40 transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-emerald-500/5"
-                >
-                  {/* Image */}
-                  <div className="relative aspect-square bg-gray-800 overflow-hidden">
-                    {deal.imageUrl ? (
-                      <img
-                        src={deal.imageUrl}
-                        alt={deal.titleHe || deal.titleEn}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-6xl bg-gradient-to-br from-gray-800 to-gray-900">
-                        📦
-                      </div>
-                    )}
-
-                    {/* Discount badge */}
-                    {savingsPercent > 0 && (
-                      <span className="absolute top-3 right-3 bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded-lg shadow-lg">
-                        -{savingsPercent}%
-                      </span>
-                    )}
-
-                    {/* Score tier emoji */}
-                    {deal.score >= 60 && (
-                      <span className="absolute top-3 left-3 text-xl drop-shadow-lg">
-                        {tier.emoji}
-                      </span>
-                    )}
-
-                    {/* Store badge */}
-                    <span className="absolute bottom-3 right-3 bg-black/70 backdrop-blur-sm text-white text-xs font-medium px-2.5 py-1 rounded-lg">
-                      {deal.store.name}
-                    </span>
-                  </div>
-
-                  {/* Info */}
-                  <div className="p-4">
-                    <h3 className="text-sm font-medium text-gray-200 line-clamp-2 mb-3 min-h-[40px] leading-relaxed">
-                      {deal.titleHe || deal.titleEn}
-                    </h3>
-
-                    <div className="flex items-baseline gap-2 mb-2">
-                      <span className="text-xl font-bold text-emerald-400">
-                        {deal.priceILS
-                          ? `₪${Math.round(deal.priceILS)}`
-                          : `$${deal.priceCurrent.toFixed(2)}`}
-                      </span>
-                      {savingsPercent > 0 && (
-                        <span className="text-xs text-gray-500 line-through">
-                          {deal.priceILS
-                            ? `₪${Math.round(deal.priceOriginal * 3.65)}`
-                            : `$${deal.priceOriginal.toFixed(2)}`}
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="flex items-center justify-between text-xs text-gray-500">
-                      <span>
-                        {deal.shippingFree
-                          ? "✅ משלוח חינם"
-                          : "📦 משלוח בתשלום"}
-                      </span>
-                      {deal.rating && (
-                        <span>
-                          ⭐ {deal.rating.toFixed(1)} (
-                          {deal.reviewCount.toLocaleString()})
-                        </span>
-                      )}
-                    </div>
-
-                    {deal.couponCode && (
-                      <div className="mt-3 bg-emerald-500/10 border border-emerald-500/20 rounded-lg px-2.5 py-1.5 text-xs text-emerald-400 text-center font-medium">
-                        🎟️ קופון: {deal.couponCode}
-                      </div>
-                    )}
-
-                    <div className="mt-3 text-center">
-                      <span className="inline-block bg-emerald-500/10 text-emerald-400 text-xs font-semibold px-4 py-1.5 rounded-lg group-hover:bg-emerald-500 group-hover:text-gray-950 transition-all">
-                        לדיל &larr;
-                      </span>
-                    </div>
-                  </div>
-                </Link>
-              );
-            })}
+            {featuredDeals.map((deal) => (
+              <DealCard key={deal.id} product={deal} />
+            ))}
           </div>
         </section>
       )}
@@ -361,12 +263,18 @@ export default async function HomePage() {
                 הדילים הכי שווים מחו&quot;ל לישראל
               </p>
             </div>
-            <div className="flex gap-8 text-sm text-gray-400">
+            <div className="flex gap-8 text-sm text-gray-400 flex-wrap justify-center md:justify-start">
               <Link
                 href="/deals"
                 className="hover:text-emerald-400 transition-colors"
               >
                 כל הדילים
+              </Link>
+              <Link
+                href="/about"
+                className="hover:text-emerald-400 transition-colors"
+              >
+                אודות
               </Link>
               <a
                 href="https://t.me/clickli26"
@@ -376,6 +284,24 @@ export default async function HomePage() {
               >
                 טלגרם
               </a>
+              <Link
+                href="/privacy"
+                className="hover:text-emerald-400 transition-colors"
+              >
+                מדיניות פרטיות
+              </Link>
+              <Link
+                href="/terms"
+                className="hover:text-emerald-400 transition-colors"
+              >
+                תנאי שימוש
+              </Link>
+              <Link
+                href="/contact"
+                className="hover:text-emerald-400 transition-colors"
+              >
+                צור קשר
+              </Link>
               <Link
                 href="/admin"
                 className="hover:text-emerald-400 transition-colors"
