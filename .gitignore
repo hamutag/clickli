@@ -44,3 +44,4 @@ prisma/dev.db-journal
 *.swo
 
 .vercel
+.env*.local
