@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import crypto from "crypto";
 
 const ADMIN_TOKEN_PREFIX = "clickli_admin_";
 
-function verifyToken(token: string, secret: string): boolean {
+async function verifyToken(token: string, secret: string): Promise<boolean> {
   if (!token || typeof token !== "string") {
     return false;
   }
@@ -22,21 +21,37 @@ function verifyToken(token: string, secret: string): boolean {
   }
 
   try {
-    const expectedSignature = crypto
-      .createHmac("sha256", secret)
-      .update(payload)
-      .digest("hex");
-
-    return crypto.timingSafeEqual(
-      Buffer.from(signature, "hex"),
-      Buffer.from(expectedSignature, "hex")
+    const encoder = new TextEncoder();
+    const keyData = encoder.encode(secret);
+    const cryptoKey = await crypto.subtle.importKey(
+      "raw",
+      keyData,
+      { name: "HMAC", hash: "SHA-256" },
+      false,
+      ["sign"]
     );
+
+    const payloadData = encoder.encode(payload);
+    const signatureBuffer = await crypto.subtle.sign("HMAC", cryptoKey, payloadData);
+    const expectedSignature = Array.from(new Uint8Array(signatureBuffer))
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+
+    // Constant-time comparison
+    if (signature.length !== expectedSignature.length) {
+      return false;
+    }
+    let mismatch = 0;
+    for (let i = 0; i < signature.length; i++) {
+      mismatch |= signature.charCodeAt(i) ^ expectedSignature.charCodeAt(i);
+    }
+    return mismatch === 0;
   } catch {
     return false;
   }
 }
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Skip login page and auth API routes
@@ -55,7 +70,7 @@ export function middleware(request: NextRequest) {
   const token = request.cookies.get("admin_token")?.value;
   const secret = process.env.NEXTAUTH_SECRET;
 
-  if (!secret || !token || !verifyToken(token, secret)) {
+  if (!secret || !token || !(await verifyToken(token, secret))) {
     if (isAdminApi) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
